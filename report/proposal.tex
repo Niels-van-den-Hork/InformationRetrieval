@@ -48,7 +48,7 @@
 
 \begin{document}
 
-\title{Statistical Machine Learning - Assignment 1}
+\title{Information Retrieval}
 \author{
 Manuel Minguez Carretero (s1234567), Martijn Schilpzand (s1234567),\\ Niels van den Hork (s4572602)}
 \date{\today}
@@ -59,16 +59,24 @@ Manuel Minguez Carretero (s1234567), Martijn Schilpzand (s1234567),\\ Niels van 
 
 
 \sect{    Introduction / motivation}
-
+We chose assignment 4 - DBPedia
+We will transform queries in the dataset into queries that get better relevance results  when queried over nordlys \footnote{http://nordlys.cc/}. Nordlys will be our search engine, DBPedia\footnote{https://wiki.dbpedia.org/about} will be searched. DBPedia-entity \footnote{https://github.com/iai-group/DBpedia-Entity} will contain the queries and results including relevance which we will use to evaulate our transformation 
 
 \sect{    Research question}
+%How effective is Nordlys in retrieving entities?
+Retrieving better entities when transform queries 
+at first we will focus on *** type of query
+we would for example transform 'How to cook pasta' to 'Pasta Recipe'
 
 
 \sect{    Resources (data/software/users)}
-
+We will be using the DBPedia Entity V2 collection
 
 \sect{    Experimental design}
 
+
+We will treat any entity that has no relevancy data is if it is not relevant
+However, we can expect cases where those entities turn out to actually be relevant results to a query. With the recall value we can focus on ' did we get everything marked relevant'  
 
 \sect{    Expected outcome}
 
