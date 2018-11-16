@@ -4,8 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import math
-import nltk
 from operator import itemgetter
+import nltk
+from nltk.stem.snowball import SnowballStemmer
+from nltk.tokenize import wordpunct_tokenize, sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
 
 
 PLOTPATH = 'plots'
@@ -13,6 +16,7 @@ PLOTPATH = 'plots'
 import os
 if not os.path.exists(PLOTPATH):
     os.makedirs(PLOTPATH)
+
 
 
 def plot_results(plain,our,measure_id = 2):
@@ -56,9 +60,19 @@ def plot_averages(plain,our):
 
 
 def transform(query):
-	#Do the thing
+    nltk.download('stopwords')
+    nltk.download('punkt')
+    stop_words = set(stopwords.words('english'))
+    word_tokens = word_tokenize(query)
+    tokens = [w for w in word_tokens if not w in stop_words]
+    stemmer = SnowballStemmer("english")
 
-	return query
+    modified_query = ""
+    for word in tokens:
+        modified_query += " " + stemmer.stem(word)
+
+    print("MODIFIED QUERY ", modified_query)
+    return modified_query
 
 def get_relevance(query):
 	#Compare nordlys with relevance
@@ -123,32 +137,33 @@ def evaluate(query): #,relevance):
 
 
 def main():
-	#Load query and relevance data
-	queries = ['Amsterdam','Mclaren','Python','Huygens']
-	relevance = []
+    #Load query and relevance data
+    queries = ['Amsterdam','Mclaren','Python','Huygens']
+    relevance = []
 
-	#(Optional) Split into folds
 
-	#(Optional) Training
 
-	evaluate("Who is the mayor of Berlin")
+    #(Optional) Split into folds
 
-	#Run
-	# plain_results = []
-	# our_results = []
-	# for query in queries:
-	# 	print(query)
-	# 	plain_results.append(evaluate(query ,relevance))
-	# 	our_results.append(evaluate(transform(query) ,relevance))
-	#
-	# #plots
-	# plain_results, our_results = np.array(plain_results) ,np.array(our_results)
-	# plot_results(plain_results, our_results,0)
-	# plot_results(plain_results, our_results,1)
-	# plot_results(plain_results, our_results,2)
-	# plot_averages(plain_results, our_results)
+    #(Optional) Training
+
+    evaluate("Who is the mayor of Berlin")
+
+    #Run
+    # plain_results = []
+    # our_results = []
+    # for query in queries:
+    # 	print(query)
+    # 	plain_results.append(evaluate(query ,relevance))
+    # 	our_results.append(evaluate(transform(query) ,relevance))
+    #
+    # #plots
+    # plain_results, our_results = np.array(plain_results) ,np.array(our_results)
+    # plot_results(plain_results, our_results,0)
+    # plot_results(plain_results, our_results,1)
+    # plot_results(plain_results, our_results,2)
+    # plot_averages(plain_results, our_results)
 
 if __name__ == "__main__":
-	main()
-
-#If we want to do machine learning, we would need a lot of data. What data would we need to train on?
+    main()
+    transform("hi how cats cat catty you doin")
