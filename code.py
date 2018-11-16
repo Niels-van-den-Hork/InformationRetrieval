@@ -103,7 +103,10 @@ def calc_ndcg(score):
 	return ndcg
 
 
-def evaluate(query): #,relevance):
+def evaluate(query,original_query = None): #,relevance):
+    if(not original_query)
+        original_query = query
+        
 	#Query nordlys
 	#REST API documentation https://nordlys.readthedocs.io/en/latest/restful_api.html
 	base_url = 'http://api.nordlys.cc/'
@@ -147,7 +150,7 @@ def main():
 
     #(Optional) Training
 
-    evaluate("Who is the mayor of Berlin")
+    evaluate("Who is the mayor of Berlin","Who is the mayor of Berlin")
 
     #Run
     # plain_results = []
