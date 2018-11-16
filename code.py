@@ -8,6 +8,7 @@ import math
 from nltk.corpus import stopwords
 from nltk.tokenize import wordpunct_tokenize, sent_tokenize, word_tokenize
 import nltk
+from nltk.stem.snowball import SnowballStemmer
 
 
 PLOTPATH = 'plots'
@@ -65,10 +66,11 @@ def transform(query):
     stop_words = set(stopwords.words('english'))
     word_tokens = word_tokenize(query)
     tokens = [w for w in word_tokens if not w in stop_words]
+    stemmer = SnowballStemmer("english")
 
     modified_query = ""
     for word in tokens:
-        modified_query += " " + word
+        modified_query += " " + stemmer.stem(word)
 
     print("MODIFIED QUERY ", modified_query)
     return modified_query
@@ -157,4 +159,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    transform("hi how you doin")
+    transform("hi how cats cat catty you doin")
