@@ -17,6 +17,9 @@ import os
 if not os.path.exists(PLOTPATH):
     os.makedirs(PLOTPATH)
 
+nltk.download('stopwords')
+nltk.download('punkt')
+stop_words = set(stopwords.words('english'))
 
 
 def plot_results(plain,our,measure_id = 2):
@@ -60,9 +63,7 @@ def plot_averages(plain,our):
 
 
 def transform(query):
-    nltk.download('stopwords')
-    nltk.download('punkt')
-    stop_words = set(stopwords.words('english'))
+
     word_tokens = word_tokenize(query)
     tokens = [w for w in word_tokens if not w in stop_words]
     stemmer = SnowballStemmer("english")
