@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import random
 import math
 
-#"test2"
 PLOTPATH = 'plots'
+
 
 import os
 if not os.path.exists(PLOTPATH):
@@ -83,62 +83,66 @@ def dcg(score):
 	return dcg
 
 
-def evaluate(query): #,relevance):
-	#Query nordlys
-	#REST API documentation https://nordlys.readthedocs.io/en/latest/restful_api.html
-	base_url = 'http://api.nordlys.cc/'
-	parameters = 'er?1st_num_docs=30&model=lm&q='
+def evaluate(query,original_query = None): #,relevance):
+    if(not original_query):
+        original_query = query
 
-	response = requests.get(base_url + parameters + query)
-	if response.status_code != 200:
-		raise ApiError('GET /er?{}/ {}'.format(parameters + query, response.status_code))
+    #Query nordlys
+    #REST API documentation https://nordlys.readthedocs.io/en/latest/restful_api.html
+    base_url = 'http://api.nordlys.cc/'
+    parameters = 'er?1st_num_docs=30&model=lm&q='
 
-	#Access individual result
-	#Example json data: http://api.nordlys.cc/er?1st_num_docs=20&model=lm&q=Amsterdam
-	results = response.json()['results']
-	entities = []
-	for i in results:
-		result = results[i]
-		entities.append(result['entity'])
-		# print('{} {}'.format(result['entity'], result['score']))
+    response = requests.get(base_url + parameters + query)
+    if response.status_code != 200:
+    	raise ApiError('GET /er?{}/ {}'.format(parameters + query, response.status_code))
 
-	score_pos = []
-	DB_rels = get_relevance(query)
-	for i in range(len(entities)):
-		for rel in DB_rels:
-			if entities[i] in rel:
-				score = int(rel[-2:-1])
-				score_pos.append((i+1, score))
-				print(score_pos[-1])
+    #Access individual result
+    #Example json data: http://api.nordlys.cc/er?1st_num_docs=20&model=lm&q=Amsterdam
+    results = response.json()['results']
+    entities = []
+    for i in results:
+    	result = results[i]
+    	entities.append(result['entity'])
+    	# print('{} {}'.format(result['entity'], result['score']))
 
-	print(dcg(score_pos))
+    score_pos = []
+    DB_rels = get_relevance(original_query)
+    for i in range(len(entities)):
+    	for rel in DB_rels:
+    		if entities[i] in rel:
+    			score = int(rel[-2:-1])
+    			score_pos.append((i+1, score))
+    			print(score_pos[-1])
+
+    print(dcg(score_pos))
 
 
 def main():
-	#Load query and relevance data
-	queries = ['Amsterdam','Mclaren','Python','Huygens']
-	relevance = []
+    #Load query and relevance data
+    queries = ['Amsterdam','Mclaren','Python','Huygens']
+    relevance = []
 
-	#(Optional) Split into folds
 
-	#(Optional) Training
 
-	evaluate("Who is the mayor of Berlin")
+    evaluate("Who is the mayor of Berlin","Who is the mayor of Berlin")
+    evaluate("mayor of Berlin","Who is the mayor of Berlin")
+    evaluate("mayor Berlin","Who is the mayor of Berlin")
+    evaluate("Berlin mayor","Who is the mayor of Berlin")
 
-	#Run
-	# plain_results = []
-	# our_results = []
-	# for query in queries:
-	# 	print(query)
-	# 	plain_results.append(evaluate(query ,relevance))
-	# 	our_results.append(evaluate(transform(query) ,relevance))
-	#
-	# #plots
-	# plain_results, our_results = np.array(plain_results) ,np.array(our_results)
-	# plot_results(plain_results, our_results,0)
-	# plot_results(plain_results, our_results,1)
-	# plot_results(plain_results, our_results,2)
-	# plot_averages(plain_results, our_results)
+    #Run
+    # plain_results = []
+    # our_results = []
+    # for query in queries:
+    # 	print(query)
+    # 	plain_results.append(evaluate(query ,relevance))
+    # 	our_results.append(evaluate(transform(query) ,relevance))
+    #
+    # #plots
+    # plain_results, our_results = np.array(plain_results) ,np.array(our_results)
+    # plot_results(plain_results, our_results,0)
+    # plot_results(plain_results, our_results,1)
+    # plot_results(plain_results, our_results,2)
+    # plot_averages(plain_results, our_results)
 
 if __name__ == "__main__":
 	main()
