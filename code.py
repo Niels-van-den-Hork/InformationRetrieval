@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 import requests
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 import random
 import math
+from operator import itemgetter
+import nltk
+from nltk.stem.snowball import SnowballStemmer
+from nltk.tokenize import wordpunct_tokenize, sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
 
 PLOTPATH = 'plots'
 
@@ -56,9 +60,19 @@ def plot_averages(plain,our):
 
 
 def transform(query):
-	#Do the thing
+    nltk.download('stopwords')
+    nltk.download('punkt')
+    stop_words = set(stopwords.words('english'))
+    word_tokens = word_tokenize(query)
+    tokens = [w for w in word_tokens if not w in stop_words]
+    stemmer = SnowballStemmer("english")
 
-	return query
+    modified_query = ""
+    for word in tokens:
+        modified_query += " " + stemmer.stem(word)
+
+    print("MODIFIED QUERY ", modified_query)
+    return modified_query
 
 def get_relevance(query):
 	#Compare nordlys with relevance
@@ -76,11 +90,17 @@ def get_relevance(query):
 	return DB_rels
 
 
-def dcg(score):
+def calc_ndcg(score):
 	dcg = score[0][1]
-	for single_score in score[1:]:
-		dcg += single_score[1]/math.log(single_score[0])
-	return dcg
+	sorted_score = sorted(score, key=itemgetter(1), reverse=True)
+	# print(sorted_score)
+	idcg = sorted_score[0][1]
+	for i in range(1, len(score)):
+		dcg += score[i][1]/math.log(score[i][0])
+		idcg += sorted_score[i][1]/math.log(score[i][0])
+	ndcg = dcg/idcg
+	print(dcg)
+	return ndcg
 
 
 def evaluate(query,original_query = None): #,relevance):
@@ -114,7 +134,9 @@ def evaluate(query,original_query = None): #,relevance):
     			score_pos.append((i+1, score))
     			print(score_pos[-1])
 
-    print(dcg(score_pos))
+	ndcg = calc_ndcg(score_pos)
+	print("Query: " + query + " \tNDCG = {:f}".format(ndcg))
+	return query, ndcg
 
 
 def main():
@@ -144,7 +166,29 @@ def main():
     # plot_results(plain_results, our_results,2)
     # plot_averages(plain_results, our_results)
 
-if __name__ == "__main__":
-	main()
 
-#If we want to do machine learning, we would need a lot of data. What data would we need to train on?
+
+    #(Optional) Split into folds
+
+    #(Optional) Training
+
+    evaluate("Who is the mayor of Berlin")
+
+    #Run
+    # plain_results = []
+    # our_results = []
+    # for query in queries:
+    # 	print(query)
+    # 	plain_results.append(evaluate(query ,relevance))
+    # 	our_results.append(evaluate(transform(query) ,relevance))
+    #
+    # #plots
+    # plain_results, our_results = np.array(plain_results) ,np.array(our_results)
+    # plot_results(plain_results, our_results,0)
+    # plot_results(plain_results, our_results,1)
+    # plot_results(plain_results, our_results,2)
+    # plot_averages(plain_results, our_results)
+
+if __name__ == "__main__":
+    main()
+    transform("hi how cats cat catty you doin")
