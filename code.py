@@ -104,37 +104,40 @@ def calc_ndcg(score):
 	return ndcg
 
 
-def evaluate(query): #,relevance):
-	#Query nordlys
-	#REST API documentation https://nordlys.readthedocs.io/en/latest/restful_api.html
-	base_url = 'http://api.nordlys.cc/'
-	parameters = 'er?1st_num_docs=30&model=lm&q='
+def evaluate(query,original_query = None): #,relevance):
+    if(not original_query):
+        original_query = query
 
-	response = requests.get(base_url + parameters + query)
-	if response.status_code != 200:
-		raise ApiError('GET /er?{}/ {}'.format(parameters + query, response.status_code))
+    #Query nordlys
+    #REST API documentation https://nordlys.readthedocs.io/en/latest/restful_api.html
+    base_url = 'http://api.nordlys.cc/'
+    parameters = 'er?1st_num_docs=30&model=lm&q='
 
-	#Access individual result
-	#Example json data: http://api.nordlys.cc/er?1st_num_docs=20&model=lm&q=Amsterdam
-	results = response.json()['results']
-	entities = []
-	for i in results:
-		result = results[i]
-		entities.append(result['entity'])
-		# print('{} {}'.format(result['entity'], result['score']))
+    response = requests.get(base_url + parameters + query)
+    if response.status_code != 200:
+    	raise ApiError('GET /er?{}/ {}'.format(parameters + query, response.status_code))
 
-	score_pos = []
-	DB_rels = get_relevance(query)
-	for i in range(len(entities)):
-		for rel in DB_rels:
-			if entities[i] in rel:
-				score = int(rel[-2:-1])
-				score_pos.append((i+1, score))
-				print(score_pos[-1])
+    #Access individual result
+    #Example json data: http://api.nordlys.cc/er?1st_num_docs=20&model=lm&q=Amsterdam
+    results = response.json()['results']
+    entities = []
+    for i in results:
+    	result = results[i]
+    	entities.append(result['entity'])
+    	# print('{} {}'.format(result['entity'], result['score']))
 
-	ndcg = calc_ndcg(score_pos)
-	print("Query: " + query + " \tNDCG = {:f}".format(ndcg))
-	return query, ndcg
+    score_pos = []
+    DB_rels = get_relevance(query)
+    for i in range(len(entities)):
+    	for rel in DB_rels:
+    		if entities[i] in rel:
+    			score = int(rel[-2:-1])
+    			score_pos.append((i+1, score))
+    			print(score_pos[-1])
+
+    ndcg = calc_ndcg(score_pos)
+    print("Query: " + query + " \tNDCG = {:f}".format(ndcg))
+    return query, ndcg
 
 
 def main():
@@ -148,7 +151,7 @@ def main():
 
     #(Optional) Training
 
-    evaluate("Who is the mayor of Berlin")
+    evaluate("Who is the mayor of Berlin","Who is the mayor of Berlin")
 
     #Run
     # plain_results = []
