@@ -104,9 +104,9 @@ def calc_ndcg(score):
 
 
 def evaluate(query,original_query = None): #,relevance):
-    if(not original_query)
+    if(not original_query):
         original_query = query
-        
+
 	#Query nordlys
 	#REST API documentation https://nordlys.readthedocs.io/en/latest/restful_api.html
 	base_url = 'http://api.nordlys.cc/'
