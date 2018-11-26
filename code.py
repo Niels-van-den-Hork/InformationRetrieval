@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,14 +12,15 @@ from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import wordpunct_tokenize, sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 
-
+nltk.download('stopwords')
+nltk.download('punkt')
 PLOTPATH = 'plots'
 
 import os
 if not os.path.exists(PLOTPATH):
     os.makedirs(PLOTPATH)
 
-
+drive = ''
 
 def plot_results(plain,our,measure_id = 2):
 	plt.close()
@@ -42,8 +45,8 @@ def plot_averages(plain,our):
 	plain_avg = list(map(np.average,[plain[:,0],plain[:,1],plain[:,2]]))
 	our_avg   = list(map(np.average,[our[:,0]  ,our[:,1]  ,our[:,2]]))
 
-	print(plain)
-	print(plain_avg)
+	#print(plain)
+	#print(plain_avg)
 	width = 0.4
 	x = np.array(range(3))
 	plt.bar(x-width/2.0,plain_avg, width = width, color = 'blue', label = 'Plain Query')
@@ -60,29 +63,27 @@ def plot_averages(plain,our):
 
 
 def transform(query):
-    nltk.download('stopwords')
-    nltk.download('punkt')
+
     stop_words = set(stopwords.words('english'))
     word_tokens = word_tokenize(query)
     tokens = [w for w in word_tokens if not w in stop_words]
-    stemmer = SnowballStemmer("english")
-
+    
     modified_query = ""
     for word in tokens:
-        modified_query += " " + stemmer.stem(word)
+        modified_query += " " + word #stemmer.stem(word)
 
-    print("MODIFIED QUERY ", modified_query)
+    #print("MODIFIED QUERY ", modified_query)
     return modified_query
 
 def get_relevance(query):
 	#Compare nordlys with relevance
-	with open ("queries-v2.txt", 'r') as queries:
+	with open (drive + "queries-v2.txt", 'r') as queries:
 		for row in queries:
 			if query in row:
 				code = row.split("\t")[0]
 
 	DB_rels = []
-	with open ("qrels-v2.txt", 'r') as qrels:
+	with open (drive + "qrels-v2.txt", 'r') as qrels: #, encoding='utf-8'
 		for row in qrels:
 			if code in row:
 				DB_rels.append(row)
@@ -91,15 +92,19 @@ def get_relevance(query):
 
 
 def calc_ndcg(score):
-	dcg = score[0][1]
-	sorted_score = sorted(score, key=itemgetter(1), reverse=True)
-	# print(sorted_score)
-	idcg = sorted_score[0][1]
-	for i in range(1, len(score)):
-		dcg += score[i][1]/math.log(score[i][0])
-		idcg += sorted_score[i][1]/math.log(score[i][0])
-	ndcg = dcg/idcg
-	print(dcg)
+	if len(score) == 0:
+		ndcg = 0
+	else:
+		dcg = score[0][1]
+		sorted_score = sorted(score, key=itemgetter(1), reverse=True)
+		# print(sorted_score)
+		idcg = sorted_score[0][1]
+		for i in range(1, len(score)):
+			dcg += score[i][1]/math.log(score[i][0])
+			idcg += sorted_score[i][1]/math.log(score[i][0])
+
+		ndcg = dcg/idcg if idcg > 0 else 0
+		#print(dcg)
 	return ndcg
 
 
@@ -110,7 +115,7 @@ def evaluate(query,original_query = None): #,relevance):
     #Query nordlys
     #REST API documentation https://nordlys.readthedocs.io/en/latest/restful_api.html
     base_url = 'http://api.nordlys.cc/'
-    parameters = 'er?1st_num_docs=30&model=lm&q='
+    parameters = 'er?1st_num_docs=20&model=lm&q='
 
     response = requests.get(base_url + parameters + query)
     if response.status_code != 200:
@@ -126,47 +131,38 @@ def evaluate(query,original_query = None): #,relevance):
     	# print('{} {}'.format(result['entity'], result['score']))
 
     score_pos = []
-    DB_rels = get_relevance(query)
+    DB_rels = get_relevance(original_query)
     for i in range(len(entities)):
     	for rel in DB_rels:
     		if entities[i] in rel:
     			score = int(rel[-2:-1])
     			score_pos.append((i+1, score))
-    			print(score_pos[-1])
+    			#print(score_pos[-1])
 
     ndcg = calc_ndcg(score_pos)
-    print("Query: " + query + " \tNDCG = {:f}".format(ndcg))
+    #print("Query: " + query + " \tNDCG = {:f}".format(ndcg))
     return query, ndcg
 
 
 def main():
     #Load query and relevance data
-    queries = ['Amsterdam','Mclaren','Python','Huygens']
+    with open (drive + "queries-NLP.txt", 'r') as query_files:
+        queries = [q.split("\t")[1][:-1] for q in query_files]
+        
+    print(queries)
     relevance = []
+    #queries = ["Who is the mayor of Berlin?"]
+    oscores,scores = [],[]
+    for query in queries:
+        #print(query)
+        _,oscore = evaluate(query)
 
-
-
-    #(Optional) Split into folds
-
-    #(Optional) Training
-
-    evaluate("Who is the mayor of Berlin","Who is the mayor of Berlin")
-
-    #Run
-    # plain_results = []
-    # our_results = []
-    # for query in queries:
-    # 	print(query)
-    # 	plain_results.append(evaluate(query ,relevance))
-    # 	our_results.append(evaluate(transform(query) ,relevance))
-    #
-    # #plots
-    # plain_results, our_results = np.array(plain_results) ,np.array(our_results)
-    # plot_results(plain_results, our_results,0)
-    # plot_results(plain_results, our_results,1)
-    # plot_results(plain_results, our_results,2)
-    # plot_averages(plain_results, our_results)
+        modified = transform(query)
+        _,score = evaluate(modified,query)
+        scores.append(score)
+        oscores.append(oscore)
+        #print(str(oscore) +" "+ str(sum(oscores)/len(oscores)) + '\t' + str(score) + ' '+ str(sum(scores)/len(scores)) +' \t '+ query  )
+        print("Original:" + str(sum(oscores)/len(oscores)) + "    Modified: " + str(sum(scores)/len(scores)) +' \t '+ query  )
 
 if __name__ == "__main__":
     main()
-    transform("hi how cats cat catty you doin")
