@@ -8,17 +8,19 @@ import random
 import math
 from operator import itemgetter
 import nltk
+import json
 
 from nltk.corpus import wordnet
 from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import wordpunct_tokenize, sent_tokenize, word_tokenize
 from nltk.corpus import stopwords, brown
-
+'''
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
 nltk.download('brown')
-
+nltk.download('averaged_perceptron_tagger')
+'''
 PLOTPATH = 'plots'
 
 freqs = nltk.FreqDist(w.lower() for w in brown.words())
@@ -28,6 +30,9 @@ if not os.path.exists(PLOTPATH):
     os.makedirs(PLOTPATH)
 
 drive = ''
+
+def avg(data):
+	return sum(data)/len(data)
 
 def plot_results(plain,our,measure_id = 2):
 	plt.close()
@@ -72,14 +77,12 @@ def plot_errors(scores_data):
 	plt.close()
 
 	
-	print(scores_data)
-	print(scores_data[:,2])
-	plt.plot(range(len(scores_data)),[float(d)-float(c) for a,b,c,d in scores_data]) #list(map(float,scores_data[:,3]-scores_data[:,2])))
+	plt.plot(range(len(scores_data)),[float(mscore)-float(oscore) for _,_,oscore,mscore,_,_ in scores_data]) 
 
 
 
-	plt.title("nee")
-	plt.savefig(PLOTPATH+"/test.png")
+	plt.title("score distribution")
+	plt.savefig(PLOTPATH+"/score_distribution.png")
 
 	
 
@@ -108,6 +111,7 @@ def transform(query):
     #no difference
     word_tokens = word_tokenize(modified_query)
 
+    '''
     for word in tagged:
         if(word[1] == 'NN' or word[1] == 'NNP' or word[1] == 'NNS'):
             syns = wordnet.synsets(word[0])
@@ -118,10 +122,9 @@ def transform(query):
                 #print(syns)
                 modified_query +=  " " + syns[0][1]
                 #print(syns,word)
-
+    '''
     # slightly increase of performance
 
-    print("MODIFIED QUERY ", modified_query)
     return modified_query
 
 def get_relevance(query):
@@ -178,7 +181,7 @@ def evaluate(query,original_query = None): #,relevance):
 	for i in results:
 		result = results[i]
 		entities.append(result['entity'])
-		# print('{} {}'.format(result['entity'], result['score']))
+		#print('{} {}'.format(result['entity'], result['score']))
 
 	score_pos = []
 	DB_rels = get_relevance(original_query)
@@ -202,27 +205,35 @@ def main():
 	with open (drive + "queries-NLP.txt", 'r') as query_files:
 		queries = [q.split("\t")[1][:-1] for q in query_files]
 
-	#print(queries)
-	relevance = []
-	#queries = ["Which river does the Brooklyn Bridge cross?"]
-	oscores,mscores = [],[]
-	modified_queries = []
 	
+	#queries = ["Who is the Formula 1 race driver with the most races?"]
+	
+	modified_queries, oscores, mscores, avgoscores, avgmscores = [],[],[],[],[]
+		
 	for query in queries:
-
 		modified = transform(query)
 		modified_queries.append(modified)
 
 		_,oscore = evaluate(query)
 		_,mscore = evaluate(modified,query)
 	
-		mscores.append(mscore)
 		oscores.append(oscore)
+		mscores.append(mscore)
+
+		avgoscores.append(avg(oscores))
+		avgmscores.append(avg(mscores))
 	
-		print("increase:" + str(sum(mscores)/len(mscores) - sum(oscores)/len(oscores))[:6] + ' \t '+ query  )
-		
-	scores_data = list(zip(queries,modified_queries,oscores,mscores))
-	scores_data = np.array(sorted(scores_data,key = lambda x :  -(float(x[3]) - float(x[2])))) #sort on increase
-	plot_errors(scores_data)
+		if (mscore - oscore < -0.05): #print only queries which decrease the score
+			print("average increase: " + str(avg(mscores) - avg(oscores))[:6] + '\t'+ query  )
+			print("modified query:","\t\t", modified)
+			print(str(oscore)[:6],str(mscore)[:6])
+			print("")
+
+	scores_data = list(zip(queries,modified_queries,oscores,mscores,avgoscores,avgmscores))
+	scores_data_np = np.asarray(sorted(scores_data,key = lambda x :  -(float(x[3]) - float(x[2])))) #sort on increase
+
+	with open('scores_data.json', 'w') as outfile:
+    		json.dump(scores_data, outfile)
+	plot_errors(scores_data_np)
 if __name__ == "__main__":
     main()
