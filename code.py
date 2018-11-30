@@ -68,7 +68,20 @@ def plot_averages(plain,our):
 	plt.title(measure_name +  " 0 Recall, 1 Precision, 2 F-measure")
 	plt.savefig(PLOTPATH+"/"+measure_name+".png")
 
+def plot_errors(scores_data):
+	plt.close()
 
+	
+	print(scores_data)
+	print(scores_data[:,2])
+	plt.plot(range(len(scores_data)),[float(d)-float(c) for a,b,c,d in scores_data]) #list(map(float,scores_data[:,3]-scores_data[:,2])))
+
+
+
+	plt.title("nee")
+	plt.savefig(PLOTPATH+"/test.png")
+
+	
 
 def removeQuestionWords(word):
     irrelevant_words = ["Give", "List", "What", "Who", "Where", "Which", "How", "me", "all", "In"]
@@ -192,18 +205,24 @@ def main():
 	#print(queries)
 	relevance = []
 	#queries = ["Which river does the Brooklyn Bridge cross?"]
-	oscores,scores = [],[]
+	oscores,mscores = [],[]
+	modified_queries = []
+	
 	for query in queries:
-		#print(query)
-		_,oscore = evaluate(query)
 
 		modified = transform(query)
-		_,score = evaluate(modified,query)
-		scores.append(score)
-		oscores.append(oscore)
-		#print(str(oscore) +" "+ str(sum(oscores)/len(oscores)) + '\t' + str(score) + ' '+ str(sum(scores)/len(scores)) +' \t '+ query  )
-		#print("Original:" + str(sum(oscores)/len(oscores))[:6] + "    Modified: " + str(sum(scores)/len(scores))[:6] +' \t '+ query  )
-		print("increase:" + str(sum(scores)/len(scores) - sum(oscores)/len(oscores))[:6] + ' \t '+ query  )
+		modified_queries.append(modified)
 
+		_,oscore = evaluate(query)
+		_,mscore = evaluate(modified,query)
+	
+		mscores.append(mscore)
+		oscores.append(oscore)
+	
+		print("increase:" + str(sum(mscores)/len(mscores) - sum(oscores)/len(oscores))[:6] + ' \t '+ query  )
+		
+	scores_data = list(zip(queries,modified_queries,oscores,mscores))
+	scores_data = np.array(sorted(scores_data,key = lambda x :  -(float(x[3]) - float(x[2])))) #sort on increase
+	plot_errors(scores_data)
 if __name__ == "__main__":
     main()
