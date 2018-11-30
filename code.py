@@ -69,6 +69,17 @@ def plot_averages(plain,our):
 	plt.savefig(PLOTPATH+"/"+measure_name+".png")
 
 
+
+def removeQuestionWords(word):
+    irrelevant_words = ["Give", "List", "What", "Who", "Where", "Which", "How", "me", "all", "In"]
+
+    if (word not in irrelevant_words):
+        return word
+    else:
+        return ""
+
+
+
 def transform(query):
 
     stop_words = set(stopwords.words('english'))
@@ -78,12 +89,12 @@ def transform(query):
 
     modified_query = ""
     for word in tokens:
-    	modified_query += " " + word #stemmer.stem(word)
+    	modified_query += " " + removeQuestionWords(word) #stemmer.stem(word)
 
     #modified_query = "".join([char for char in modified_query if char not in ['.',',','?','!']])
     #no difference
     word_tokens = word_tokenize(modified_query)
-    '''
+
     for word in tagged:
         if(word[1] == 'NN' or word[1] == 'NNP' or word[1] == 'NNS'):
             syns = wordnet.synsets(word[0])
@@ -95,8 +106,8 @@ def transform(query):
                 modified_query +=  " " + syns[0][1]
                 #print(syns,word)
 
-    # decrease performance by 4%
-    '''
+    # slightly increase of performance
+
     print("MODIFIED QUERY ", modified_query)
     return modified_query
 
