@@ -17,6 +17,8 @@ from nltk.corpus import stopwords, brown
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
+nltk.download('brown')
+
 PLOTPATH = 'plots'
 
 freqs = nltk.FreqDist(w.lower() for w in brown.words())
@@ -69,37 +71,34 @@ def plot_averages(plain,our):
 
 def transform(query):
 
-	stop_words = set(stopwords.words('english'))
-	word_tokens = word_tokenize(query)
-	tokens = [w for w in word_tokens if not w in stop_words]
+    stop_words = set(stopwords.words('english'))
+    word_tokens = word_tokenize(query)
+    tokens = [w for w in word_tokens if not w in stop_words]
+    tagged = nltk.pos_tag(tokens)
 
-	
+    modified_query = ""
+    for word in tokens:
+    	modified_query += " " + word #stemmer.stem(word)
 
-	modified_query = ""
-	for word in tokens:
-		modified_query += " " + word #stemmer.stem(word)
+    #modified_query = "".join([char for char in modified_query if char not in ['.',',','?','!']])
+    #no difference
+    word_tokens = word_tokenize(modified_query)
+    '''
+    for word in tagged:
+        if(word[1] == 'NN' or word[1] == 'NNP' or word[1] == 'NNS'):
+            syns = wordnet.synsets(word[0])
+            if(syns):
+                syns = list(set([(freqs[syn.lemmas()[0].name().lower()] ,syn.lemmas()[0].name()) for syn in syns]))
+                syns.append((freqs[word[0].lower()] ,word[0]) )
+                syns = sorted(syns, key = lambda x : -x[0]) #-freqs[x[1]])
+                #print(syns)
+                modified_query +=  " " + syns[0][1]
+                #print(syns,word)
 
-	#modified_query = "".join([char for char in modified_query if char not in ['.',',','?','!']])
-	#no difference
-
-	for word in modified_query.split(" "):
-		syns = wordnet.synsets(word)
-
-		if (syns):
-			syns = list(set([(freqs[syn.lemmas()[0].name().lower()] ,syn.lemmas()[0].name()) for syn in syns]))
-			syns.append((freqs[word.lower()] ,word) )
-			syns = sorted(syns, key = lambda x : -x[0]) #-freqs[x[1]])
-			#print(syns)
-
-
-
-			modified_query +=  " " + syns[0][1]
-			#print(syns,word)
-    
-	# decrease performance by 4%
-
-	#print("MODIFIED QUERY ", modified_query)
-	return modified_query
+    # decrease performance by 4%
+    '''
+    print("MODIFIED QUERY ", modified_query)
+    return modified_query
 
 def get_relevance(query):
 	#Compare nordlys with relevance
@@ -107,7 +106,7 @@ def get_relevance(query):
 		for row in queries:
 			if query in row:
 				code = row.split("\t")[0]
-	
+
 	DB_rels = []
 	with open (drive + "qrels-v2.txt", 'r') as qrels: #, encoding='utf-8'
 		for row in qrels:
@@ -167,7 +166,7 @@ def evaluate(query,original_query = None): #,relevance):
 				score = int(rel[-2:-1])
 				score_pos.append((i+1, score))
 	#print(score_pos)
-		
+
 
 	ndcg = calc_ndcg(score_pos)
 	#print("Query: " + query + " \tNDCG = {:f}".format(ndcg))
