@@ -10,6 +10,11 @@ from operator import itemgetter
 import nltk
 import time
 import json
+import spacy
+from spacy import displacy
+from collections import Counter
+# import en_core_web_sm
+
 
 from nltk.corpus import wordnet
 from nltk.stem.snowball import SnowballStemmer
@@ -23,7 +28,7 @@ from nltk.corpus import stopwords, brown
 # nltk.download('averaged_perceptron_tagger')
 
 PLOTPATH = 'plots'
-
+DATAPATH = 'data'
 freqs = nltk.FreqDist(w.lower() for w in brown.words())
 
 import os
@@ -92,6 +97,11 @@ def removeQuestionWords(word):
     else:
         return ""
 
+
+def entity_retrieval(query):
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(query)
+    print([(X.text, X.label_) for X in doc.ents])
 
 
 def transform(query, stemming=False, stopping=False, qwords=False, synonyms=False):
@@ -217,13 +227,13 @@ def main():
     # queries = ["Who composed the music for Harold and Maude?"]
     #
     modified_queries, oscores, mscores, avgoscores, avgmscores = [],[],[],[],[]
-    stemscores, stopscores, qscores, qstopsynscores = [],[],[],[]
+    stemscores, stopscores, qscores, synscores = [],[],[],[]
 
     for query in queries:
         stem = transform(query, stemming=True)
         stop = transform(query, stopping=True)
         qwords = transform(query, qwords=True)
-        qstopsyn = transform(query, qwords=True, stopping=True, synonyms=True)
+        syn = transform(query, qwords=True, stopping=True, synonyms=True)
         # print(qstopsyn)
 
         # modified_queries.append(modified)
@@ -232,22 +242,16 @@ def main():
         _,stemscore = evaluate(stem, query)
         _,stopscore = evaluate(stop, query)
         _,qscore = evaluate(qwords, query)
-        _,qstopsynscore = evaluate(qstopsyn, query)
-
-        # if oscore > 1. or mscore > 1.:
-        #     print("oscore = " + str(oscore) + " \t oquery = " + query)
-        #     print("mscore = " + str(mscore) + " \t mquery = " + modified)
-        #     break
-
+        _,synscore = evaluate(syn, query)
 
         oscores.append(oscore)
         stemscores.append(stemscore)
         stopscores.append(stopscore)
         qscores.append(qscore)
-        qstopsynscores.append(qstopsynscore)
+        synscores.append(synscore)
 
         avgoscores.append(avg(oscores))
-        avgmscores.append(avg(qstopsynscores))
+        avgmscores.append(avg(synscores))
 
         # if (mscore - oscore < -0.05): #print only queries which decrease the score
         #     print("average increase: " + str(avg(mscores) - avg(oscores))[:6] + '\t'+ query  )
@@ -255,18 +259,18 @@ def main():
         #     print(str(oscore)[:6],str(mscore)[:6])
         #     print("")
 
-        print("Original Average: {:5f}".format(avgoscores[-1]) + "\t Modified Average: {:5f}".format(avgmscores[-1]))
+        print("Original Average: {:5f}".format(avgoscores[-1]) + "\t Syn Average: {:5f}".format(avgmscores[-1]))
 
-    print("---- Time: {:3f} seconds ----".format(time.time() - start_time))
+    print("---- Evaluation and transformation time: {:3f} seconds ----".format(time.time() - start_time))
 
     scores_data = list(zip(queries,modified_queries,oscores,mscores,avgoscores,avgmscores))
     # scores_data_np = np.asarray(sorted(scores_data,key = lambda x :  -(float(x[3]) - float(x[2])))) #sort on increase
 
-    oscores_sorted = np.asarray(sorted(oscores, reverse=True))
-    stemscores_sorted = np.asarray(sorted(stemscores, reverse=True))
-    stopscores_sorted = np.asarray(sorted(stopscores, reverse=True))
-    qscores_sorted = np.asarray(sorted(qscores, reverse=True))
-    qstopsynscores_sorted = np.asarray(sorted(qstopsynscores, reverse=True))
+    oscores_sorted = np.asarray(sorted(oscores))#, reverse=True))
+    stemscores_sorted = np.asarray(sorted(stemscores))#, reverse=True))
+    stopscores_sorted = np.asarray(sorted(stopscores))#, reverse=True))
+    qscores_sorted = np.asarray(sorted(qscores))#, reverse=True))
+    qstopsynscores_sorted = np.asarray(sorted(synscores))#, reverse=True))
 
 
 
@@ -281,6 +285,9 @@ def main():
     plt.savefig(PLOTPATH + "/methods.png")
     plt.show()
 
+    avgs = np.array([avg(oscores), avg(stemscores), avg(stopscores), avg(qscores), avg(synscores)])
+
+    np.save(DATAPATH + "/avgs_methods", avgs)
     # with open('scores_data.json', 'w') as outfile:
     #     json.dump(scores_data, outfile)
     # plot_errors(scores_data_np)
@@ -288,3 +295,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+# query = "Who is the formula 1 race driver with the most races?"
+# entity_retrieval(query)
