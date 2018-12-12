@@ -21,11 +21,11 @@ from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import wordpunct_tokenize, sent_tokenize, word_tokenize
 from nltk.corpus import stopwords, brown
 
-# nltk.download('stopwords')
-# nltk.download('punkt')
-# nltk.download('wordnet')
-# nltk.download('brown')
-# nltk.download('averaged_perceptron_tagger')
+#nltk.download('stopwords')
+#nltk.download('punkt')
+#nltk.download('wordnet')
+#nltk.download('brown')
+#nltk.download('averaged_perceptron_tagger')
 
 PLOTPATH = 'plots'
 DATAPATH = 'data'
@@ -159,7 +159,7 @@ def get_relevance(query):
                 code = row.split("\t")[0]
 
     DB_rels = []
-    with open (drive + "qrels-v2.txt", 'r') as qrels: #, encoding='utf-8'
+    with open (drive + "qrels-v2.txt", 'r', encoding='utf-8') as qrels:
         for row in qrels:
             if code == row.split("\t")[0]:
                 DB_rels.append(row)
@@ -233,8 +233,9 @@ def main():
     # queries = ["Who composed the music for Harold and Maude?"]
     #
     modified_queries, oscores, mscores, avgoscores = [],[],[],[]
-    avgstemscores, avgstopscores, avgqscores, avgsynscores, avgentscores= [],[],[],[],[]
+    avgstemscores, avgstopscores, avgqscores, avgsynscores, avgentscores, avgcomboscores= [],[],[],[],[],[]
     stemscores, stopscores, qscores, synscores, entscores, combscores = [],[],[],[],[],[]
+    stopqwords, avgstopqwords, stopqwscore = [], [], []
 
     for query in queries:
         stem = transform(query, stemming=True)  # Stemming
@@ -242,8 +243,8 @@ def main():
         qwords = transform(query, qwords=True)  # Question Word Removal
         syn = transform(query, synonyms=True)   # Added synonyms
         ent = transform(query, ent_rec=True)    # Added entities
-        # comb = transform(query, stemming=False, stopping=True, qwords=True, synonyms=True) #, ent_rec=True)
-
+        comb = transform(query, stemming=False, stopping=True, qwords=True, synonyms=True, ent_rec=True) #, ent_rec=True)
+        #stopqw = transform(query, stopping=True, qwords=True)
         # modified_queries.append(modified)
 
         _,oscore = evaluate(query)
@@ -252,7 +253,8 @@ def main():
         _,qscore = evaluate(qwords, query)
         _,synscore = evaluate(syn, query)
         _,entscore = evaluate(ent, query)
-        # _,combscore = evaluate(comb, query)
+        _,combscore = evaluate(comb, query)
+        #_, stopqwscore = evaluate(stopqw, query)
 
         oscores.append(oscore)
         stemscores.append(stemscore)
@@ -260,7 +262,11 @@ def main():
         qscores.append(qscore)
         synscores.append(synscore)
         entscores.append(entscore)
-        # combscores.append(combscore)
+        combscores.append(combscore)
+        stopqwords.append(stopqwscore)
+        #avgstopqwords.append(avg(stopqwords))
+
+
 
         avgoscores.append(avg(oscores))
         avgstemscores.append(avg(stemscores))
@@ -268,15 +274,21 @@ def main():
         avgqscores.append(avg(qscores))
         avgsynscores.append(avg(synscores))
         avgentscores.append(avg(entscores))
+        avgcomboscores.append(avg(combscores))
+
+
+
+
         # if (mscore - oscore < -0.05): #print only queries which decrease the score
         #     print("average increase: " + str(avg(mscores) - avg(oscores))[:6] + '\t'+ query  )
         #     print("modified query:","\t\t", modified)
-        #     print(str(oscore)[:6],str(mscore)[:6])
+        #     print(str(oscore)[:6],str(synscores)[:6])
         #     print("")
 
         print("Averages: Original: {:4f}".format(avgoscores[-1]) + "\t stem: {:4f}".format(avgstemscores[-1]) +
               "\t stop: {:4f}".format(avgstopscores[-1]) + "\t q: {:4f}".format(avgqscores[-1]) +
-              "\t syn: {:4f}".format(avgsynscores[-1]), "\t ent: {:4f}".format(avgentscores[-1]))
+              "\t syn: {:4f}".format(avgsynscores[-1]), "\t ent: {:4f}".format(avgentscores[-1])
+              + "\t combo: {:4f}".format(avgcomboscores[-1]))#  + "\t stopqw: {:4f}".format(avgstopqwords[-1]))
 
     print("---- Evaluation and transformation time: {:3f} seconds ----".format(time.time() - start_time))
 
@@ -320,10 +332,3 @@ if __name__ == "__main__":
 #     for i in range(len(queries)):
 #         print(queries[i])
 #         print(entity_retrieval(queries[i]))
-
-
-
-
-
-
-
