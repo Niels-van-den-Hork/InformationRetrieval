@@ -21,11 +21,11 @@ from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import wordpunct_tokenize, sent_tokenize, word_tokenize
 from nltk.corpus import stopwords, brown
 
-# nltk.download('stopwords')
-# nltk.download('punkt')
-# nltk.download('wordnet')
-# nltk.download('brown')
-# nltk.download('averaged_perceptron_tagger')
+#nltk.download('stopwords')
+#nltk.download('punkt')
+#nltk.download('wordnet')
+#nltk.download('brown')
+#nltk.download('averaged_perceptron_tagger')
 
 PLOTPATH = 'plots'
 DATAPATH = 'data'
@@ -153,7 +153,7 @@ def get_relevance(query):
                 code = row.split("\t")[0]
 
     DB_rels = []
-    with open (drive + "qrels-v2.txt", 'r') as qrels: #, encoding='utf-8'
+    with open (drive + "qrels-v2.txt", 'r', encoding='utf-8') as qrels:
         for row in qrels:
             if code == row.split("\t")[0]:
                 DB_rels.append(row)
@@ -251,12 +251,12 @@ def main():
         synscores.append(synscore)
 
         avgoscores.append(avg(oscores))
-        avgmscores.append(avg(synscores))
+        avgmscores.append(avg(stopscores))
 
-        # if (mscore - oscore < -0.05): #print only queries which decrease the score
-        #     print("average increase: " + str(avg(mscores) - avg(oscores))[:6] + '\t'+ query  )
+        #if (synscores[-1] - oscore < -0.05): #print only queries which decrease the score
+        #     print("average increase: " + str(avg(synscores) - avg(oscores))[:6] + '\t'+ query  )
         #     print("modified query:","\t\t", modified)
-        #     print(str(oscore)[:6],str(mscore)[:6])
+        #     print(str(oscore)[:6],str(synscores)[:6])
         #     print("")
 
         print("Original Average: {:5f}".format(avgoscores[-1]) + "\t Syn Average: {:5f}".format(avgmscores[-1]))
