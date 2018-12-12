@@ -64,8 +64,6 @@ def plot_averages(plain,our):
     plain_avg = list(map(np.average,[plain[:,0],plain[:,1],plain[:,2]]))
     our_avg   = list(map(np.average,[our[:,0]  ,our[:,1]  ,our[:,2]]))
 
-    #print(plain)
-    #print(plain_avg)
     width = 0.4
     x = np.array(range(3))
     plt.bar(x-width/2.0,plain_avg, width = width, color = 'blue', label = 'Plain Query')
@@ -88,7 +86,6 @@ def plot_errors(scores_data):
     plt.savefig(PLOTPATH+"/score_distribution.png")
 
 
-
 def removeQuestionWords(word):
     irrelevant_words = ["Give", "List", "What", "Who", "Where", "Which", "How", "me", "all", "In"]
 
@@ -101,10 +98,12 @@ def removeQuestionWords(word):
 def entity_retrieval(query):
     nlp = spacy.load("en_core_web_sm")
     doc = nlp(query)
-    print([(X.text, X.label_) for X in doc.ents])
+    relevant_ents = ["PERSON", "NORP", "FAC", "ORG", "GPE", "LOC", "PRODUCT", "EVENT", "WORK_OF_ART"]  #, "LANGUAGE"]
+    selected_ents = [x.text for x in doc.ents if x.label_ in relevant_ents]
+    return selected_ents
 
 
-def transform(query, stemming=False, stopping=False, qwords=False, synonyms=False):
+def transform(query, stemming=False, stopping=False, qwords=False, synonyms=False, ent_rec=False):
 
     stop_words = set(stopwords.words('english'))
     word_tokens = word_tokenize(query)
@@ -128,6 +127,12 @@ def transform(query, stemming=False, stopping=False, qwords=False, synonyms=Fals
     # no difference
     word_tokens = word_tokenize(modified_query)
 
+    ent_additions = ""
+    if ent_rec:
+        ents = entity_retrieval(query)
+        for ent in ents:
+            ent_additions += " " + ent
+
     if synonyms:
         for word in tagged:
             if(word[1] == 'NN' or word[1] == 'NNP' or word[1] == 'NNS'):
@@ -140,8 +145,9 @@ def transform(query, stemming=False, stopping=False, qwords=False, synonyms=Fals
                     modified_query +=  " " + syns[0][1]
                     #print(syns,word)
 
-    # slightly increase of performance
+    modified_query += ent_additions  # Added these afterwards to avoid synonyms of repeated entities.
 
+    # print(modified_query)
     return modified_query
 
 
@@ -226,15 +232,17 @@ def main():
 
     # queries = ["Who composed the music for Harold and Maude?"]
     #
-    modified_queries, oscores, mscores, avgoscores, avgmscores = [],[],[],[],[]
-    stemscores, stopscores, qscores, synscores = [],[],[],[]
+    modified_queries, oscores, mscores, avgoscores = [],[],[],[]
+    avgstemscores, avgstopscores, avgqscores, avgsynscores, avgentscores= [],[],[],[],[]
+    stemscores, stopscores, qscores, synscores, entscores, combscores = [],[],[],[],[],[]
 
     for query in queries:
-        stem = transform(query, stemming=True)
-        stop = transform(query, stopping=True)
-        qwords = transform(query, qwords=True)
-        syn = transform(query, qwords=True, stopping=True, synonyms=True)
-        # print(qstopsyn)
+        stem = transform(query, stemming=True)  # Stemming
+        stop = transform(query, stopping=True)  # Stopping
+        qwords = transform(query, qwords=True)  # Question Word Removal
+        syn = transform(query, synonyms=True)   # Added synonyms
+        ent = transform(query, ent_rec=True)    # Added entities
+        # comb = transform(query, stemming=False, stopping=True, qwords=True, synonyms=True) #, ent_rec=True)
 
         # modified_queries.append(modified)
 
@@ -243,36 +251,44 @@ def main():
         _,stopscore = evaluate(stop, query)
         _,qscore = evaluate(qwords, query)
         _,synscore = evaluate(syn, query)
+        _,entscore = evaluate(ent, query)
+        # _,combscore = evaluate(comb, query)
 
         oscores.append(oscore)
         stemscores.append(stemscore)
         stopscores.append(stopscore)
         qscores.append(qscore)
         synscores.append(synscore)
+        entscores.append(entscore)
+        # combscores.append(combscore)
 
         avgoscores.append(avg(oscores))
-        avgmscores.append(avg(synscores))
-
+        avgstemscores.append(avg(stemscores))
+        avgstopscores.append(avg(stopscores))
+        avgqscores.append(avg(qscores))
+        avgsynscores.append(avg(synscores))
+        avgentscores.append(avg(entscores))
         # if (mscore - oscore < -0.05): #print only queries which decrease the score
         #     print("average increase: " + str(avg(mscores) - avg(oscores))[:6] + '\t'+ query  )
         #     print("modified query:","\t\t", modified)
         #     print(str(oscore)[:6],str(mscore)[:6])
         #     print("")
 
-        print("Original Average: {:5f}".format(avgoscores[-1]) + "\t Syn Average: {:5f}".format(avgmscores[-1]))
+        print("Averages: Original: {:4f}".format(avgoscores[-1]) + "\t stem: {:4f}".format(avgstemscores[-1]) +
+              "\t stop: {:4f}".format(avgstopscores[-1]) + "\t q: {:4f}".format(avgqscores[-1]) +
+              "\t syn: {:4f}".format(avgsynscores[-1]), "\t ent: {:4f}".format(avgentscores[-1]))
 
     print("---- Evaluation and transformation time: {:3f} seconds ----".format(time.time() - start_time))
 
-    scores_data = list(zip(queries,modified_queries,oscores,mscores,avgoscores,avgmscores))
+    # scores_data = list(zip(queries,modified_queries,oscores,mscores,avgoscores,avgmscores))
     # scores_data_np = np.asarray(sorted(scores_data,key = lambda x :  -(float(x[3]) - float(x[2])))) #sort on increase
 
-    oscores_sorted = np.asarray(sorted(oscores))#, reverse=True))
-    stemscores_sorted = np.asarray(sorted(stemscores))#, reverse=True))
-    stopscores_sorted = np.asarray(sorted(stopscores))#, reverse=True))
-    qscores_sorted = np.asarray(sorted(qscores))#, reverse=True))
-    qstopsynscores_sorted = np.asarray(sorted(synscores))#, reverse=True))
-
-
+    oscores_sorted = np.asarray(sorted(oscores))  #, reverse=True))
+    stemscores_sorted = np.asarray(sorted(stemscores))  #, reverse=True))
+    stopscores_sorted = np.asarray(sorted(stopscores))  #, reverse=True))
+    qscores_sorted = np.asarray(sorted(qscores))  #, reverse=True))
+    synscores_sorted = np.asarray(sorted(synscores))  #, reverse=True))
+    entscores_sorted = np.asarray(sorted(entscores))  #, reverse=True))
 
     x = np.arange(len(oscores))
 
@@ -280,14 +296,16 @@ def main():
     plt.plot(x, stemscores_sorted, label="Stemming")
     plt.plot(x, stopscores_sorted, label="Stopping")
     plt.plot(x, qscores_sorted, label="Question word removal")
-    plt.plot(x, qstopsynscores_sorted, label="Question word removal + Stopping + synonyms")
+    plt.plot(x, synscores_sorted, label="Synonyms")
+    plt.plot(x, entscores_sorted, label="Entity Recognition")
     plt.legend()
     plt.savefig(PLOTPATH + "/methods.png")
     plt.show()
 
-    avgs = np.array([avg(oscores), avg(stemscores), avg(stopscores), avg(qscores), avg(synscores)])
+    avgs = np.array([avg(oscores), avg(stemscores), avg(stopscores), avg(qscores), avg(synscores), avg(entscores)])
 
-    np.save(DATAPATH + "/avgs_methods", avgs)
+    # np.save(DATAPATH + "/avgs_methods", avgs)
+
     # with open('scores_data.json', 'w') as outfile:
     #     json.dump(scores_data, outfile)
     # plot_errors(scores_data_np)
@@ -295,5 +313,17 @@ def main():
 
 if __name__ == "__main__":
     main()
-# query = "Who is the formula 1 race driver with the most races?"
-# entity_retrieval(query)
+
+# Testing entity recognition
+# with open (drive + "queries-NLP.txt", 'r') as query_files:
+#     queries = [q.split("\t")[1][:-1] for q in query_files]
+#     for i in range(len(queries)):
+#         print(queries[i])
+#         print(entity_retrieval(queries[i]))
+
+
+
+
+
+
+
