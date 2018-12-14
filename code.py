@@ -277,6 +277,8 @@ def main():
         avgcomboscores.append(avg(combscores))
 
 
+		totalcomboscores.append(combscores)
+
 
 
         # if (mscore - oscore < -0.05): #print only queries which decrease the score
@@ -292,8 +294,8 @@ def main():
 
     print("---- Evaluation and transformation time: {:3f} seconds ----".format(time.time() - start_time))
 
-    # scores_data = list(zip(queries,modified_queries,oscores,mscores,avgoscores,avgmscores))
-    # scores_data_np = np.asarray(sorted(scores_data,key = lambda x :  -(float(x[3]) - float(x[2])))) #sort on increase
+
+    
 
     oscores_sorted = np.asarray(sorted(oscores))  #, reverse=True))
     stemscores_sorted = np.asarray(sorted(stemscores))  #, reverse=True))
@@ -301,6 +303,10 @@ def main():
     qscores_sorted = np.asarray(sorted(qscores))  #, reverse=True))
     synscores_sorted = np.asarray(sorted(synscores))  #, reverse=True))
     entscores_sorted = np.asarray(sorted(entscores))  #, reverse=True))
+	#totalcomboscores_sorted = np.asarray(sorted(totalcomboscores))  
+
+    zip_scores_data = list(zip(oscores,totalcomboscores))
+	scores_data_np = np.asarray(sorted(zip_scores_data,key = lambda x :  -(float(x[1]) - float(x[0])))) 		#sort on increase
 
     x = np.arange(len(oscores))
 
@@ -320,7 +326,7 @@ def main():
 
     # with open('scores_data.json', 'w') as outfile:
     #     json.dump(scores_data, outfile)
-    # plot_errors(scores_data_np)
+    plot_errors(scores_data_np)
 
 
 if __name__ == "__main__":
