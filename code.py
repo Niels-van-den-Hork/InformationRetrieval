@@ -81,7 +81,7 @@ def plot_averages(plain,our):
 
 def plot_errors(scores_data):
     plt.close()
-    plt.plot(range(len(scores_data)),[float(mscore)-float(oscore) for _,_,oscore,mscore,_,_ in scores_data])
+    plt.plot(range(len(scores_data)),[float(mscore)-float(oscore) for oscore,mscore in scores_data])
     plt.title("score distribution")
     plt.savefig(PLOTPATH+"/score_distribution.png")
 
@@ -104,6 +104,9 @@ def entity_retrieval(query):
 
 
 def transform(query, stemming=False, stopping=False, qwords=False, synonyms=False, ent_rec=False):
+
+    added_words = set()
+
 
     stop_words = set(stopwords.words('english'))
     word_tokens = word_tokenize(query)
@@ -130,8 +133,13 @@ def transform(query, stemming=False, stopping=False, qwords=False, synonyms=Fals
     ent_additions = ""
     if ent_rec:
         ents = entity_retrieval(query)
+
         for ent in ents:
-            ent_additions += " " + ent
+            ent_tokens = word_tokenize(ent)
+            for word in ent_tokens:
+                added_words.add(word.lower())
+
+            #ent_additions += " " + ent
 
     if synonyms:
         for word in tagged:
@@ -142,11 +150,16 @@ def transform(query, stemming=False, stopping=False, qwords=False, synonyms=Fals
                     syns.append((freqs[word[0].lower()] ,word[0]) )
                     syns = sorted(syns, key = lambda x : -x[0]) #-freqs[x[1]])
                     #print(syns)
-                    modified_query +=  " " + syns[0][1]
+                    added_words.add(syns[0][1].lower())
+                    #modified_query +=  " " + syns[0][1]
+
                     #print(syns,word)
 
-    modified_query += ent_additions  # Added these afterwards to avoid synonyms of repeated entities.
+    #modified_query += ent_additions  # Added these afterwards to avoid synonyms of repeated entities.
 
+
+    for word in added_words:
+        modified_query += ' ' + word
     # print(modified_query)
     return modified_query
 
@@ -235,92 +248,101 @@ def main():
     modified_queries, oscores, mscores, avgoscores = [],[],[],[]
     avgstemscores, avgstopscores, avgqscores, avgsynscores, avgentscores, avgcomboscores= [],[],[],[],[],[]
     stemscores, stopscores, qscores, synscores, entscores, combscores = [],[],[],[],[],[]
-    stopqwords, avgstopqwords, stopqwscore = [], [], []
+    stopqwords, avgstopqwords, stopqwscore, totalcomboscores = [], [], [], []
 
     for query in queries:
-        stem = transform(query, stemming=True)  # Stemming
-        stop = transform(query, stopping=True)  # Stopping
-        qwords = transform(query, qwords=True)  # Question Word Removal
-        syn = transform(query, synonyms=True)   # Added synonyms
-        ent = transform(query, ent_rec=True)    # Added entities
+
+        #stem = transform(query, stemming=True)  # Stemming
+        #stop = transform(query, stopping=True)  # Stopping
+        #qwords = transform(query, qwords=True)  # Question Word Removal
+        #syn = transform(query, synonyms=True)   # Added synonyms
+        #ent = transform(query, ent_rec=True)    # Added entities
         comb = transform(query, stemming=False, stopping=True, qwords=True, synonyms=True, ent_rec=True) #, ent_rec=True)
         #stopqw = transform(query, stopping=True, qwords=True)
         # modified_queries.append(modified)
 
         _,oscore = evaluate(query)
-        _,stemscore = evaluate(stem, query)
-        _,stopscore = evaluate(stop, query)
-        _,qscore = evaluate(qwords, query)
-        _,synscore = evaluate(syn, query)
-        _,entscore = evaluate(ent, query)
+        #_,stemscore = evaluate(stem, query)
+        #_,stopscore = evaluate(stop, query)
+        #_,qscore = evaluate(qwords, query)
+        #_,synscore = evaluate(syn, query)
+        #_,entscore = evaluate(ent, query)
         _,combscore = evaluate(comb, query)
         #_, stopqwscore = evaluate(stopqw, query)
 
         oscores.append(oscore)
-        stemscores.append(stemscore)
-        stopscores.append(stopscore)
-        qscores.append(qscore)
-        synscores.append(synscore)
-        entscores.append(entscore)
+        #stemscores.append(stemscore)
+        #stopscores.append(stopscore)
+        #qscores.append(qscore)
+        #synscores.append(synscore)
+        #entscores.append(entscore)
         combscores.append(combscore)
-        stopqwords.append(stopqwscore)
+        #stopqwords.append(stopqwscore)
         #avgstopqwords.append(avg(stopqwords))
 
 
 
         avgoscores.append(avg(oscores))
-        avgstemscores.append(avg(stemscores))
-        avgstopscores.append(avg(stopscores))
-        avgqscores.append(avg(qscores))
-        avgsynscores.append(avg(synscores))
-        avgentscores.append(avg(entscores))
+        #avgstemscores.append(avg(stemscores))
+        #avgstopscores.append(avg(stopscores))
+        #avgqscores.append(avg(qscores))
+        #avgsynscores.append(avg(synscores))
+        #avgentscores.append(avg(entscores))
         avgcomboscores.append(avg(combscores))
+        print("Averages: Original: {:4f}".format(avgoscores[-1]) + "\t combo: {:4f}".format(avgcomboscores[-1]))
 
 
-		totalcomboscores.append(combscores)
+        with open("testqueries.txt","a+") as outfile:
+            if ((- combscore) + oscore < -0.25): #print only queries which decrease the score
 
 
+                print("average increase: " + str(avg(combscores) - avg(oscores))[:6] + '\t')
+                print("Original query:","\t\t", query)
+                print("modified query:","\t\t", comb)
+                print(str(oscore)[:6],str(combscores)[:6])
+                print("")
+                outfile.write(query)
+                outfile.write(' \n')
+                outfile.write(comb)
+                outfile.write(' \n \n')
 
-        # if (mscore - oscore < -0.05): #print only queries which decrease the score
-        #     print("average increase: " + str(avg(mscores) - avg(oscores))[:6] + '\t'+ query  )
-        #     print("modified query:","\t\t", modified)
-        #     print(str(oscore)[:6],str(synscores)[:6])
-        #     print("")
-
-        print("Averages: Original: {:4f}".format(avgoscores[-1]) + "\t stem: {:4f}".format(avgstemscores[-1]) +
-              "\t stop: {:4f}".format(avgstopscores[-1]) + "\t q: {:4f}".format(avgqscores[-1]) +
-              "\t syn: {:4f}".format(avgsynscores[-1]), "\t ent: {:4f}".format(avgentscores[-1])
-              + "\t combo: {:4f}".format(avgcomboscores[-1]))#  + "\t stopqw: {:4f}".format(avgstopqwords[-1]))
+    #print("Averages: Original: {:4f}".format(avgoscores[-1]) + "\t stem: {:4f}".format(avgstemscores[-1]) +
+    #      "\t stop: {:4f}".format(avgstopscores[-1]) + "\t q: {:4f}".format(avgqscores[-1]) +
+    #      "\t syn: {:4f}".format(avgsynscores[-1]), "\t ent: {:4f}".format(avgentscores[-1])
+    #      + "\t combo: {:4f}".format(avgcomboscores[-1]))#  + "\t stopqw: {:4f}".format(avgstopqwords[-1]))
 
     print("---- Evaluation and transformation time: {:3f} seconds ----".format(time.time() - start_time))
 
 
-    
 
-    oscores_sorted = np.asarray(sorted(oscores))  #, reverse=True))
-    stemscores_sorted = np.asarray(sorted(stemscores))  #, reverse=True))
-    stopscores_sorted = np.asarray(sorted(stopscores))  #, reverse=True))
-    qscores_sorted = np.asarray(sorted(qscores))  #, reverse=True))
-    synscores_sorted = np.asarray(sorted(synscores))  #, reverse=True))
-    entscores_sorted = np.asarray(sorted(entscores))  #, reverse=True))
-	#totalcomboscores_sorted = np.asarray(sorted(totalcomboscores))  
 
-    zip_scores_data = list(zip(oscores,totalcomboscores))
-	scores_data_np = np.asarray(sorted(zip_scores_data,key = lambda x :  -(float(x[1]) - float(x[0])))) 		#sort on increase
+    #oscores_sorted = np.asarray(sorted(oscores))  #, reverse=True))
+    #stemscores_sorted = np.asarray(sorted(stemscores))  #, reverse=True))
+    #stopscores_sorted = np.asarray(sorted(stopscores))  #, reverse=True))
+    #qscores_sorted = np.asarray(sorted(qscores))  #, reverse=True))
+    #synscores_sorted = np.asarray(sorted(synscores))  #, reverse=True))
+    #entscores_sorted = np.asarray(sorted(entscores))  #, reverse=True))
+    #totalcomboscores_sorted = np.asarray(sorted(totalcomboscores))
+
+
+
+
+    zip_scores_data = list(zip(oscores,combscores))
+    scores_data_np = np.asarray(sorted(zip_scores_data,key = lambda x :  -(float(x[1]) - float(x[0])))) 		#sort on increase
 
     x = np.arange(len(oscores))
 
-    plt.plot(x, oscores_sorted, label="Original")
-    plt.plot(x, stemscores_sorted, label="Stemming")
-    plt.plot(x, stopscores_sorted, label="Stopping")
-    plt.plot(x, qscores_sorted, label="Question word removal")
-    plt.plot(x, synscores_sorted, label="Synonyms")
-    plt.plot(x, entscores_sorted, label="Entity Recognition")
-    plt.legend()
-    plt.savefig(PLOTPATH + "/methods.png")
-    plt.show()
+    #plt.plot(x, oscores_sorted, label="Original")
+    #plt.plot(x, stemscores_sorted, label="Stemming")
+    #plt.plot(x, stopscores_sorted, label="Stopping")
+    #plt.plot(x, qscores_sorted, label="Question word removal")
+    #plt.plot(x, synscores_sorted, label="Synonyms")
+    #plt.plot(x, entscores_sorted, label="Entity Recognition")
+    #plt.legend()
+    #plt.savefig(PLOTPATH + "/methods.png")
+    #plt.show()
 
-    avgs = np.array([avg(oscores), avg(stemscores), avg(stopscores), avg(qscores), avg(synscores), avg(entscores)])
+    #avgs = np.array([avg(oscores), avg(stemscores), avg(stopscores), avg(qscores), avg(synscores), avg(entscores)])
 
     # np.save(DATAPATH + "/avgs_methods", avgs)
 

@@ -1,0 +1,114 @@
+Who is the mayor of Berlin? 
+  mayor Berlin ? berlin 
+ 
+Give me all professional skateboarders from Sweden. 
+  professional skateboarders Sweden . give sweden skateboarder 
+ 
+Give me all world heritage sites designated within the past five years. 
+  world heritage sites designated within past five years . model years heritage world 
+ 
+What is the longest river? 
+  longest river ? river 
+ 
+Give me all cars that are produced in Germany. 
+  cars produced Germany . germany car 
+ 
+Give me all Australian nonprofit organizations. 
+  Australian nonprofit organizations . australian administration 
+ 
+Give me all companies in Munich. 
+  companies Munich . munich company 
+ 
+Who founded Intel? 
+  founded Intel ? intel 
+ 
+Which professional surfers were born on the Philippines? 
+  professional surfers born Philippines ? philippines surfer 
+ 
+Give me a list of all lakes in Denmark. 
+  list lakes Denmark . denmark lake number 
+ 
+Give me all Argentine films. 
+  Argentine films . film argentine 
+ 
+Which ships were called after Benjamin Franklin? 
+  ships called Benjamin Franklin ? benjamin franklin 
+ 
+Give me all books by William Goldman with more than 300 pages. 
+  books William Goldman 300 pages . page william goldman book 
+ 
+Give me a list of all American inventions. 
+  list American inventions . american invention number 
+ 
+Who created the comic Captain America? 
+  created comic Captain America ? america captain 
+ 
+Who is the daughter of Bill Clinton married to? 
+  daughter Bill Clinton married ? clinton bill 
+ 
+Which river does the Brooklyn Bridge cross? 
+  river Brooklyn Bridge cross ? bridge cross brooklyn the river 
+ 
+Which classis does the Millepede belong to? 
+  classis Millepede belong ? millepede millipede belong 
+ 
+Who created Goofy? 
+  created Goofy ? goofy cockamamie 
+ 
+Give me all cities in New Jersey with more than 100000 inhabitants. 
+  cities New Jersey 100000 inhabitants . new inhabitants city jersey 
+ 
+Which mountain is the highest after the Annapurna? 
+  mountain highest Annapurna ? annapurna mountain parvati 
+ 
+Which bridges are of the same type as the Manhattan Bridge? 
+  bridges type Manhattan Bridge ? bridge the type manhattan 
+ 
+Which European countries have a constitutional monarchy? 
+  European countries constitutional monarchy ? state monarchy european 
+ 
+Which awards did WikiLeaks win? 
+  awards WikiLeaks win ? wikileaks award gain 
+ 
+Which telecommunications organizations are located in Belgium? 
+  telecommunications organizations located Belgium ? telecommunication administration belgium 
+ 
+What is the highest place of Karakoram? 
+  highest place Karakoram ? karakoram place 
+ 
+Give me all companies in the advertising industry. 
+  companies advertising industry . industry company 
+ 
+Give me all school types. 
+  school types . school type 
+ 
+Give me all presidents of the United States. 
+  presidents United States . states united president the 
+ 
+Give me all actors starring in Batman Begins. 
+  actors starring Batman Begins . batman actor begin begins 
+ 
+Which software has been developed by organizations founded in California? 
+  software developed organizations founded California ? california software administration 
+ 
+Which companies work in the aerospace industry as well as on nuclear reactor technology? 
+  companies work aerospace industry well nuclear reactor technology ? aerospace industry engineering reactor company 
+ 
+Which actors were born in Germany? 
+  actors born Germany ? germany actor 
+ 
+Which languages are spoken in Estonia? 
+  languages spoken Estonia ? estonia 
+ 
+Give me all Canadian Grunge record labels. 
+  Canadian Grunge record labels . label canadian read dirt 
+ 
+In which programming language is GIMP written? 
+  programming language GIMP written ? limp language 
+ 
+Give me all movies with Tom Cruise. 
+  movies Tom Cruise . movies tom cruise 
+ 
+What is the highest mountain 
+  highest mountain mountain 
+ 
